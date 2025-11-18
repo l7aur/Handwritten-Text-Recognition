@@ -1,0 +1,7 @@
+a_z_handwritten_data.csv
+.venv/
+.vscode/
+
+core/__pycache__/
+core/az_dataset/__pycache__/
+core/models/__pycache__/
