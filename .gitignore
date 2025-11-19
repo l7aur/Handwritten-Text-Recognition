@@ -1,5 +1,5 @@
 a_z_handwritten_data.csv
-/handwriting.model.h5
+handwriting.model.*
 
 .venv/
 .vscode/
