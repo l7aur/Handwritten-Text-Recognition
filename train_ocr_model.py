@@ -21,7 +21,7 @@ ap.add_argument("-m", "--model", required=True, type=str, help="path to output t
 ap.add_argument("-p", "--plot", type=str, default="plot.png", help="path to output training history file")
 args = vars(ap.parse_args())
 
-EPOCHS = 50
+EPOCHS = 25
 INIT_LR = 1e-1
 BS = 128
 
@@ -84,7 +84,7 @@ predictions = model.predict(testX, batch_size=BS)
 print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=labelNames))
 
 print("[INFO] Serializing model")
-model.save(args["model"], save_format="h5")
+model.save(filepath=args["model"] + ".h5")
 
 N = np.arange(0, EPOCHS)
 plt.style.use("ggplot")
