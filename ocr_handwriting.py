@@ -27,7 +27,7 @@ chars = []
 
 for c in cnts:
     (x, y, w, h) = cv2.boundingRect(c)
-    if w >= 5 and w <=150 and h >= 5 and h <= 120:
+    if w >= 5 and w <=150 and h >= 15 and h <= 120:
         roi = gray[y:y+h, x:x+w]
         thresh=cv2.threshold(roi, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
         (tH, tW) = thresh.shape
@@ -49,14 +49,14 @@ for c in cnts:
 
         chars.append((padded, (x, y, w, h)))
 
-    boxes = [b[1] for b in chars]
-    chars = np.array([c[0] for c in chars], dtype="float32")
+boxes = [b[1] for b in chars]
+chars = np.array([c[0] for c in chars], dtype="float32")
 
-    preds = model.predict(chars)
+preds = model.predict(chars)
 
-    labelNames = "0123456789"
-    labelNames += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    labelNames = [l for l in labelNames]
+labelNames = "0123456789"
+labelNames += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+labelNames = [l for l in labelNames]
 
 for (pred, (x, y, w, h)) in zip(preds, boxes):
     i = np.argmax(pred)

@@ -21,7 +21,7 @@ ap.add_argument("-m", "--model", required=True, type=str, help="path to output t
 ap.add_argument("-p", "--plot", type=str, default="plot.png", help="path to output training history file")
 args = vars(ap.parse_args())
 
-EPOCHS = 25
+EPOCHS = 5
 INIT_LR = 1e-1
 BS = 128
 
@@ -42,7 +42,6 @@ data /= 255.0
 
 le = LabelBinarizer()
 labels = le.fit_transform(labels)
-counts = labels.sum(axis=0)
 
 classTotals = labels.sum(axis=0)
 classWeight = {}
@@ -63,14 +62,14 @@ aug = ImageDataGenerator(
 
 print("[INFO] Compiling model")
 opt = SGD(learning_rate=INIT_LR, weight_decay=INIT_LR / EPOCHS)
-model = ResNet.build(32, 32, 1, len(le.classes_), (3, 3, 3), (64, 64, 128, 256), reg=0.005)
+model = ResNet.build(32, 32, 1, len(le.classes_), (3, 3, 3), (64, 64, 128, 256), reg=0.0005)
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
 
 print("[INFO] Training network")
 H = model.fit(
     aug.flow(trainX, trainY, batch_size=BS),
     validation_data=(testX, testY),
-    steps_per_epoch=len(trainX),
+    steps_per_epoch=len(trainX) // BS,
     epochs=EPOCHS,
     class_weight=classWeight,
     verbose=1)
@@ -84,7 +83,7 @@ predictions = model.predict(testX, batch_size=BS)
 print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=labelNames))
 
 print("[INFO] Serializing model")
-model.save(filepath=args["model"] + ".h5")
+model.save(args["model"] + ".keras")
 
 N = np.arange(0, EPOCHS)
 plt.style.use("ggplot")
