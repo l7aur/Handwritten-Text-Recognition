@@ -6,8 +6,10 @@ from core.az_dataset import load_mnist_dataset
 from core.az_dataset import load_az_dataset
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import SGD
+from tensorflow.keras.callbacks import LearningRateScheduler
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import classification_report
 from imutils import build_montages
 import numpy as np
@@ -21,8 +23,8 @@ ap.add_argument("-m", "--model", required=True, type=str, help="path to output t
 ap.add_argument("-p", "--plot", type=str, default="plot.png", help="path to output training history file")
 args = vars(ap.parse_args())
 
-EPOCHS = 50
-INIT_LR = 1e-1
+EPOCHS = 75
+INIT_LR = 1e-2
 BS = 128
 
 print("[INFO] Loading datasets")
@@ -44,34 +46,49 @@ le = LabelBinarizer()
 labels = le.fit_transform(labels)
 
 classTotals = labels.sum(axis=0)
-classWeight = {}
 
-for i in range(0, len(classTotals)):
-    classWeight[i] = classTotals.max() / classTotals[i]
+classWeight = compute_class_weight(
+    class_weight="balanced",
+    classes=np.unique(labels.argmax(axis=1)),
+    y=labels.argmax(axis=1)
+)
+classWeight = dict(enumerate(classWeight))
+
 
 (trainX, testX, trainY, testY) = train_test_split(data, labels, test_size=0.20, stratify=labels, random_state=42)
 
 aug = ImageDataGenerator(
-    rotation_range=10,
-    zoom_range=0.05,
-    width_shift_range=0.1,
-    height_shift_range=0.1,
-    shear_range=0.15,
+    rotation_range=5,
+    zoom_range=0.02,
+    width_shift_range=0.05,
+    height_shift_range=0.05,
+    shear_range=0.05,
     horizontal_flip=False,
     fill_mode="nearest")
 
 print("[INFO] Compiling model")
-opt = SGD(learning_rate=INIT_LR, weight_decay=INIT_LR / EPOCHS)
+opt = SGD(learning_rate=INIT_LR, momentum=0.9)
 model = ResNet.build(32, 32, 1, len(le.classes_), (3, 3, 3), (64, 64, 128, 256), reg=0.0005)
 model.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
 
 print("[INFO] Training network")
+
+def poly_decay(epoch):
+    maxEpochs = EPOCHS
+    baseLR = INIT_LR
+    power = 1.0
+    alpha = baseLR * (1 - (epoch / float(maxEpochs))) ** power
+    return alpha
+
+lr_scheduler = LearningRateScheduler(poly_decay)
+
 H = model.fit(
     aug.flow(trainX, trainY, batch_size=BS),
     validation_data=(testX, testY),
     steps_per_epoch=len(trainX) // BS,
     epochs=EPOCHS,
     class_weight=classWeight,
+    callbacks=[lr_scheduler],
     verbose=1)
 
 labelNames = "0123456789"

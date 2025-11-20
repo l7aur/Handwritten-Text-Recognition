@@ -1,5 +1,6 @@
 a_z_handwritten_data.csv
-handwriting.model.*
+handwriting.model.keras
+handwriting1.model.keras
 
 .venv/
 .vscode/
