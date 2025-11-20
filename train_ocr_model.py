@@ -21,7 +21,7 @@ ap.add_argument("-m", "--model", required=True, type=str, help="path to output t
 ap.add_argument("-p", "--plot", type=str, default="plot.png", help="path to output training history file")
 args = vars(ap.parse_args())
 
-EPOCHS = 5
+EPOCHS = 50
 INIT_LR = 1e-1
 BS = 128
 
